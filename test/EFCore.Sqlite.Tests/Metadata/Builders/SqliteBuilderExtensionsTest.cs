@@ -60,22 +60,22 @@ public class SqliteBuilderExtensionsTest
 
         Assert.Equal(1, property.GetSrid());
     }
+    
+    [Theory]
+    [MemberData(nameof(BigIntegerTypesData))]
+    public void Can_set_default_value_for_big_integer(Type propertyType, string propertyName, object defaultValue)
+    {
+        var modelBuilder = CreateConventionModelBuilder();
 
-    // TODO
-    //[ConditionalFact]
-    //public void something()
-    //{
-    //    var modelBuilder = CreateConventionModelBuilder();
+        var property = modelBuilder
+            .Entity<BlackHole>()
+            .Property(propertyType, propertyName)
+            .HasDefaultValue(defaultValue)
+            .Metadata;
 
-    //    var property = modelBuilder
-    //        .Entity<BlackHole>()
-    //        .Property(p => p.Id)
-    //        .HasDefaultValue(0)
-    //        .Metadata;
-
-    //    Assert.Equal("0", property.GetDefaultValue());        
-    //}
-
+        Assert.Equal(defaultValue, property.GetDefaultValue());
+    }
+    
     #region UseSqlReturningClause
 
     [ConditionalFact]
@@ -192,7 +192,7 @@ public class SqliteBuilderExtensionsTest
 
     protected virtual ModelBuilder CreateConventionModelBuilder()
         => SqliteTestHelpers.Instance.CreateConventionBuilder();
-
+    
     private class Customer
     {
         public int Id { get; set; }
@@ -200,9 +200,17 @@ public class SqliteBuilderExtensionsTest
     }
 
     private class BlackHole
-    {
+    {        
         public Int128 Id { get; set; }
         public UInt128 DistanceFromSun { get; set; }
         public BigInteger Mass { get; set; }
     }
+
+    public static IEnumerable<object[]> BigIntegerTypesData
+        => new List<object[]>
+        {
+            new object[] { typeof(Int128), "Id", Int128.MinValue },
+            new object[] { typeof(UInt128), "DistanceFromSun", UInt128.MaxValue },
+            new object[] { typeof(BigInteger), "Mass", BigInteger.One }
+        };
 }
