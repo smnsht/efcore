@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Numerics;
+
 namespace Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 public class SqliteBuilderExtensionsTest
@@ -58,6 +60,21 @@ public class SqliteBuilderExtensionsTest
 
         Assert.Equal(1, property.GetSrid());
     }
+
+    // TODO
+    //[ConditionalFact]
+    //public void something()
+    //{
+    //    var modelBuilder = CreateConventionModelBuilder();
+
+    //    var property = modelBuilder
+    //        .Entity<BlackHole>()
+    //        .Property(p => p.Id)
+    //        .HasDefaultValue(0)
+    //        .Metadata;
+
+    //    Assert.Equal("0", property.GetDefaultValue());        
+    //}
 
     #region UseSqlReturningClause
 
@@ -180,5 +197,12 @@ public class SqliteBuilderExtensionsTest
     {
         public int Id { get; set; }
         public string Geometry { get; set; }
+    }
+
+    private class BlackHole
+    {
+        public Int128 Id { get; set; }
+        public UInt128 DistanceFromSun { get; set; }
+        public BigInteger Mass { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Data;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Sqlite.Storage.Internal;
 
@@ -286,6 +287,21 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
         }
     }
 
+    [ConditionalTheory]
+    [InlineData(typeof(BigInteger), DbType.String, 2000)]
+    [InlineData(typeof(Int128), DbType.String, 40)]
+    [InlineData(typeof(UInt128), DbType.String, 40)]
+    public void Does_mappings_for_big_integer_types(Type clrType, DbType? dbType, int? size)
+    {
+        var mapping = GetTypeMapping(clrType);
+        Assert.Equal("TEXT", mapping.StoreType);
+        Assert.Equal(Nullable.GetUnderlyingType(clrType) ?? clrType, mapping.ClrType);
+        Assert.Equal(dbType, mapping.DbType);
+        Assert.Equal(size, mapping.Size);
+        Assert.False(mapping.IsUnicode);
+        Assert.True(mapping.IsFixedLength);
+    }
+
     [ConditionalFact]
     public void Does_default_mappings_for_values()
     {
@@ -303,6 +319,9 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
         Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(1.0m).StoreType);
         Assert.Equal("REAL", CreateRelationalTypeMappingSource().GetMappingForValue(1.0).StoreType);
         Assert.Equal("REAL", CreateRelationalTypeMappingSource().GetMappingForValue(1.0f).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new Int128()).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new UInt128()).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new BigInteger()).StoreType);
     }
 
     [ConditionalFact]
@@ -324,6 +343,13 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
         Assert.Equal(
             RelationalStrings.UnsupportedType("object"),
             Assert.Throws<InvalidOperationException>(() => CreateRelationalTypeMappingSource().GetMapping(typeof(object))).Message);
+    }
+
+    [ConditionalFact]
+    public void SqliteBigIntegerTypeMapping_ctor_throws_when_invalid_argument()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SqliteBigIntegerTypeMapping(null));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new SqliteBigIntegerTypeMapping(typeof(string)));
     }
 
     [ConditionalFact]
