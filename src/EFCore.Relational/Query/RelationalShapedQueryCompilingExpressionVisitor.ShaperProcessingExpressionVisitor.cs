@@ -433,7 +433,11 @@ public partial class RelationalShapedQueryCompilingExpressionVisitor
 
                     if (newExpression.Arguments[0] is ProjectionBindingExpression projectionBindingExpression)
                     {
-                        var propertyMap = (IDictionary<IProperty, int>)GetProjectionIndex(projectionBindingExpression);
+                        var projectionIndex = GetProjectionIndex(projectionBindingExpression);
+                        var propertyMap = projectionIndex is IDictionary<IProperty, int>
+                            ? (IDictionary<IProperty, int>)projectionIndex
+                            : ((QueryableJsonProjectionInfo)projectionIndex).PropertyIndexMap;
+
                         _materializationContextBindings[parameterExpression] = propertyMap;
                         _entityTypeIdentifyingExpressionInfo[parameterExpression] =
                             // If single entity type is being selected in hierarchy then we use the value directly else we store the offset
@@ -533,6 +537,50 @@ public partial class RelationalShapedQueryCompilingExpressionVisitor
 
                             accessor = CompensateForCollectionMaterialization(
                                 visitedShaperResultParameter,
+                                shaper.Type);
+                        }
+                        else if (GetProjectionIndex(projectionBindingExpression) is QueryableJsonProjectionInfo queryableJsonEntityProjectionInfo)
+                        {
+                            if (_isTracking)
+                            {
+                                throw new InvalidOperationException(
+                                    RelationalStrings.JsonEntityOrCollectionProjectedAtRootLevelInTrackingQuery(nameof(EntityFrameworkQueryableExtensions.AsNoTracking)));
+                            }
+
+                            // json entity converted to query root and projected
+                            var entityParameter = Parameter(shaper.Type);
+                            _variables.Add(entityParameter);
+                            var entityMaterializationExpression = (BlockExpression)_parentVisitor.InjectEntityMaterializers(shaper);
+
+                            var mappedProperties = queryableJsonEntityProjectionInfo.PropertyIndexMap.Keys.ToList();
+                            var rewrittenEntityMaterializationExpression = new QueryableJsonEntityMaterializerRewriter(mappedProperties)
+                                .Rewrite(entityMaterializationExpression);
+
+                            var visitedEntityMaterializationExpression = Visit(rewrittenEntityMaterializationExpression);
+                            _expressions.Add(Assign(entityParameter, visitedEntityMaterializationExpression));
+
+                            foreach (var childProjectionInfo in queryableJsonEntityProjectionInfo.ChildrenProjectionInfo)
+                            {
+                                var (jsonReaderDataVariable, keyValuesParameter) = JsonShapingPreProcess(
+                                    childProjectionInfo.JsonProjectionInfo,
+                                    childProjectionInfo.Navigation.TargetEntityType,
+                                    childProjectionInfo.Navigation.IsCollection);
+
+                                var shaperResult = CreateJsonShapers(
+                                    childProjectionInfo.Navigation.TargetEntityType,
+                                    nullable: true,
+                                    jsonReaderDataVariable,
+                                    keyValuesParameter,
+                                    parentEntityExpression: entityParameter,
+                                    navigation: childProjectionInfo.Navigation);
+
+                                var visitedShaperResult = Visit(shaperResult);
+
+                                _includeExpressions.Add(visitedShaperResult);
+                            }
+
+                            accessor = CompensateForCollectionMaterialization(
+                                entityParameter,
                                 shaper.Type);
                         }
                         else
@@ -1473,6 +1521,39 @@ public partial class RelationalShapedQueryCompilingExpressionVisitor
                     //sometimes we have shadow value buffer and sometimes not, but type initializer always comes last
                     switch (body.Expressions[^1])
                     {
+                        case UnaryExpression { Operand: BlockExpression innerBlock } jsonEntityTypeInitializerUnary
+                        when jsonEntityTypeInitializerUnary.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked:
+                        {
+                            // in case of proxies, the entity initializer block is wrapped around Convert node
+                            // that converts from the proxy type to the actual entity type.
+                            // We normalize that into a block by pushing the convert inside the inner block. Rather than:
+                            //
+                            // return (MyEntity)
+                            // {
+                            //     ProxyEntity instance;
+                            //     (...)
+                            //     return instance;
+                            // }
+                            //
+                            // we produce:
+                            // return
+                            // {
+                            //     ProxyEntity instance;
+                            //     MyEntity actualInstance;
+                            //     (...)
+                            //     actualInstance = (MyEntity)instance;
+                            //     return actualInstance;
+                            // }
+                            var newVariables = innerBlock.Variables.ToList();
+                            var proxyConversionVariable = Variable(jsonEntityTypeInitializerUnary.Type);
+                            newVariables.Add(proxyConversionVariable);
+                            var newExpressions = innerBlock.Expressions.ToList()[..^1];
+                            newExpressions.Add(Assign(proxyConversionVariable, jsonEntityTypeInitializerUnary.Update(innerBlock.Expressions[^1])));
+                            newExpressions.Add(proxyConversionVariable);
+                            jsonEntityTypeInitializerBlock = Block(newVariables, newExpressions);
+                            break;
+                        }
+
                         case BlockExpression b:
                             jsonEntityTypeInitializerBlock = b;
                             break;
@@ -1928,9 +2009,8 @@ public partial class RelationalShapedQueryCompilingExpressionVisitor
                             var currentVariable = Variable(parameter!.Type);
                             return Block(
                                 new[] { currentVariable },
-                                Assign(
-                                    currentVariable,
-                                    MakeMemberAccess(_instance, property.GetMemberInfo(forMaterialization: true, forSet: false))),
+                                MakeMemberAccess(_instance, property.GetMemberInfo(forMaterialization: true, forSet: false))
+                                    .Assign(currentVariable),
                                 IfThenElse(
                                     OrElse(
                                         ReferenceEqual(currentVariable, Constant(null)),
@@ -1943,7 +2023,11 @@ public partial class RelationalShapedQueryCompilingExpressionVisitor
                                 ));
                         }
 
-                        return MakeBinary(node.NodeType, Visit(node.Left), parameter!);
+                        var visitedLeft = Visit(node.Left);
+                        return node.NodeType == ExpressionType.Assign
+                            && visitedLeft is MemberExpression memberExpression
+                                ? memberExpression.Assign(parameter!)
+                                : MakeBinary(node.NodeType, visitedLeft, parameter!);
                     }
 
                     return base.VisitBinary(node);
@@ -2138,6 +2222,62 @@ public partial class RelationalShapedQueryCompilingExpressionVisitor
                 }
 
                 return arrayElementAccessParameter;
+            }
+        }
+
+        private sealed class QueryableJsonEntityMaterializerRewriter : ExpressionVisitor
+        {
+            private readonly List<IProperty> _mappedProperties;
+
+            public QueryableJsonEntityMaterializerRewriter(List<IProperty> mappedProperties)
+            {
+                _mappedProperties = mappedProperties;
+            }
+
+            public BlockExpression Rewrite(BlockExpression jsonEntityShaperMaterializer)
+                => (BlockExpression)VisitBlock(jsonEntityShaperMaterializer);
+
+            protected override Expression VisitBinary(BinaryExpression binaryExpression)
+            {
+                // here we try to pattern match part of the shaper code that checks if key values are null
+                // if they are all non-null then we generate the entity
+                // problem for JSON entities is that some of the keys are synthesized and should be omitted
+                // if the key is one of the mapped ones, we leave the expression as is, otherwise replace with Constant(true)
+                // i.e. removing it
+                if (binaryExpression is
+                    {
+                        NodeType: ExpressionType.NotEqual,
+                        Left: MethodCallExpression
+                        {
+                            Method: { IsGenericMethod: true } method,
+                            Arguments: [_, _, ConstantExpression { Value: IProperty property }]
+                        },
+                        Right: ConstantExpression { Value: null }
+                    }
+                    && method.GetGenericMethodDefinition() == Infrastructure.ExpressionExtensions.ValueBufferTryReadValueMethod)
+                {
+                    return _mappedProperties.Contains(property)
+                        ? binaryExpression
+                        : Constant(true);
+                }
+
+                return base.VisitBinary(binaryExpression);
+            }
+
+            protected override Expression VisitMethodCall(MethodCallExpression methodCallExpression)
+            {
+                if (methodCallExpression is
+                    {
+                        Method: { IsGenericMethod: true } method,
+                        Arguments: [_, _, ConstantExpression { Value: IProperty property }]
+                    }
+                    && method.GetGenericMethodDefinition() == Infrastructure.ExpressionExtensions.ValueBufferTryReadValueMethod
+                    && !_mappedProperties.Contains(property))
+                {
+                    return Default(methodCallExpression.Type);
+                }
+
+                return base.VisitMethodCall(methodCallExpression);
             }
         }
 
