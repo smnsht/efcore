@@ -632,8 +632,8 @@ namespace Microsoft.Data.Sqlite
         {
             new object[] { BigInteger.One, "1" },
 #if NET7_0_OR_GREATER
-            new object[] { Int128.MaxValue, SqliteType.Text },
-            new object[] { UInt128.MaxValue, SqliteType.Text },
+            new object[] { Int128.MaxValue, Int128.MaxValue.ToString() },
+            new object[] { UInt128.MaxValue, UInt128.MaxValue.ToString() },
 #endif
         };
 
