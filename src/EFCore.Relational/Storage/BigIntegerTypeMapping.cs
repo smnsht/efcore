@@ -38,7 +38,7 @@ public class BigIntegerTypeMapping : RelationalTypeMapping
     public BigIntegerTypeMapping(
         string storeType,
         DbType? dbType = System.Data.DbType.String)
-        : base(storeType, typeof(BigInteger), dbType, jsonValueReaderWriter: JsonInt32ReaderWriter.Instance)
+        : base(storeType, typeof(BigInteger), dbType, jsonValueReaderWriter: JsonBigIntegerReaderWriter.Instance)
     {
     }
 

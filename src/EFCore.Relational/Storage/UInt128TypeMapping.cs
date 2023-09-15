@@ -48,7 +48,7 @@ public class UInt128TypeMapping : RelationalTypeMapping
         bool unicode = false,
         int? size = ColumnWidth,
         bool fixedLength = true)
-        : base(storeType, typeof(UInt128), dbType, unicode, size, fixedLength, jsonValueReaderWriter: JsonUInt32ReaderWriter.Instance)
+        : base(storeType, typeof(UInt128), dbType, unicode, size, fixedLength, jsonValueReaderWriter: JsonUInt128ReaderWriter.Instance)
     {
     }
 
