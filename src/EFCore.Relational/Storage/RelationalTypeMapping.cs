@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Data;
 using System.Globalization;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore.Storage.Json;
 
 namespace Microsoft.EntityFrameworkCore.Storage;
@@ -269,7 +270,10 @@ public abstract class RelationalTypeMapping : CoreTypeMapping
         [typeof(short)] = GetDataReaderMethod(nameof(DbDataReader.GetInt16)),
         [typeof(int)] = GetDataReaderMethod(nameof(DbDataReader.GetInt32)),
         [typeof(long)] = GetDataReaderMethod(nameof(DbDataReader.GetInt64)),
-        [typeof(string)] = GetDataReaderMethod(nameof(DbDataReader.GetString))
+        [typeof(string)] = GetDataReaderMethod(nameof(DbDataReader.GetString)),
+        [typeof(Int128)] = GetDataReaderMethod("GetInt128"),
+        [typeof(UInt128)] = GetDataReaderMethod("GetUInt128"),
+        [typeof(BigInteger)] = GetDataReaderMethod("GetBigInteger"),
     };
 
     private static MethodInfo GetDataReaderMethod(string name)
