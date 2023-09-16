@@ -24,7 +24,7 @@ public sealed class JsonBigIntegerReaderWriter : JsonValueReaderWriter<BigIntege
     /// <inheritdoc />
     public override BigInteger FromJsonTyped(ref Utf8JsonReaderManager manager, object? existingObject = null)
     {
-        if (BigInteger.TryParse(manager.CurrentReader.GetString(), out BigInteger result))
+        if (!BigInteger.TryParse(manager.CurrentReader.GetString(), out BigInteger result))
         {
             throw new FormatException("BigInteger");
         }

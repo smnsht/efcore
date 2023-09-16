@@ -25,7 +25,11 @@ public class SqliteInt128TypeMapping : Int128TypeMapping
     ///     any release. You should only use it directly in your code with extreme caution and knowing that
     ///     doing so can result in application failures when updating to a new Entity Framework Core release.
     /// </summary>
-    public SqliteInt128TypeMapping() : base(SqliteTypeMappingSource.TextTypeName)
+    public SqliteInt128TypeMapping()
+        : base(
+            SqliteTypeMappingSource.TextTypeName,
+            size: null,
+            fixedLength: false)
     {
     }
 

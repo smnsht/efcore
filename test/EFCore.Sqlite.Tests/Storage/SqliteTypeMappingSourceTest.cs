@@ -26,9 +26,12 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(DateTime), DbType.DateTime)]
     [InlineData("TEXT", typeof(DateTimeOffset), DbType.DateTimeOffset)]
     [InlineData("TEXT", typeof(TimeSpan), DbType.Time)]
-    [InlineData("TEXT", typeof(decimal), DbType.Decimal)]
+    [InlineData("TEXT", typeof(decimal), DbType.Decimal)]    
     [InlineData("REAL", typeof(float), DbType.Single)]
     [InlineData("REAL", typeof(double), DbType.Double)]
+    [InlineData("TEXT", typeof(Int128), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger), DbType.String)]
     [InlineData("INTEGER", typeof(ByteEnum), DbType.Byte)]
     [InlineData("INTEGER", typeof(ShortEnum), DbType.Int16)]
     [InlineData("INTEGER", typeof(IntEnum), DbType.Int32)]
@@ -52,6 +55,9 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(decimal?), DbType.Decimal)]
     [InlineData("REAL", typeof(float?), DbType.Single)]
     [InlineData("REAL", typeof(double?), DbType.Double)]
+    [InlineData("TEXT", typeof(Int128?), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128?), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger?), DbType.String)]
     [InlineData("INTEGER", typeof(ByteEnum?), DbType.Byte)]
     [InlineData("INTEGER", typeof(ShortEnum?), DbType.Int16)]
     [InlineData("INTEGER", typeof(IntEnum?), DbType.Int32)]
@@ -174,6 +180,15 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(decimal), DbType.Decimal)]
     [InlineData("CONTEXTUALIZE", typeof(decimal), DbType.Decimal)]
     [InlineData("RUBBISH", typeof(decimal), DbType.Decimal)]
+    [InlineData("TEXT", typeof(Int128), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(Int128), DbType.String)]
+    [InlineData("RUBBISH", typeof(Int128), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(UInt128), DbType.String)]
+    [InlineData("RUBBISH", typeof(UInt128), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(BigInteger), DbType.String)]
+    [InlineData("RUBBISH", typeof(BigInteger), DbType.String)]
     [InlineData("REAL", typeof(float), DbType.Single)]
     [InlineData("UNREALISTIC", typeof(float), DbType.Single)]
     [InlineData("RUBBISH", typeof(float), DbType.Single)]
@@ -243,6 +258,15 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(decimal?), DbType.Decimal)]
     [InlineData("CONTEXTUALIZE", typeof(decimal?), DbType.Decimal)]
     [InlineData("RUBBISH", typeof(decimal?), DbType.Decimal)]
+    [InlineData("TEXT", typeof(Int128?), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(Int128?), DbType.String)]
+    [InlineData("RUBBISH", typeof(Int128?), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128?), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(UInt128?), DbType.String)]
+    [InlineData("RUBBISH", typeof(UInt128?), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger?), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(BigInteger?), DbType.String)]
+    [InlineData("RUBBISH", typeof(BigInteger?), DbType.String)]
     [InlineData("REAL", typeof(float?), DbType.Single)]
     [InlineData("UNREALISTIC", typeof(float?), DbType.Single)]
     [InlineData("RUBBISH", typeof(float?), DbType.Single)]
@@ -285,22 +309,7 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
             Assert.False(mapping.IsUnicode);
             Assert.False(mapping.IsFixedLength);
         }
-    }
-
-    [ConditionalTheory]
-    [InlineData(typeof(BigInteger), DbType.String, 2000)]
-    [InlineData(typeof(Int128), DbType.String, 40)]
-    [InlineData(typeof(UInt128), DbType.String, 40)]
-    public void Does_mappings_for_big_integer_types(Type clrType, DbType? dbType, int? size)
-    {
-        var mapping = GetTypeMapping(clrType);
-        Assert.Equal("TEXT", mapping.StoreType);
-        Assert.Equal(Nullable.GetUnderlyingType(clrType) ?? clrType, mapping.ClrType);
-        Assert.Equal(dbType, mapping.DbType);
-        Assert.Equal(size, mapping.Size);
-        Assert.False(mapping.IsUnicode);
-        Assert.True(mapping.IsFixedLength);
-    }
+    }    
 
     [ConditionalFact]
     public void Does_default_mappings_for_values()
@@ -343,14 +352,7 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
         Assert.Equal(
             RelationalStrings.UnsupportedType("object"),
             Assert.Throws<InvalidOperationException>(() => CreateRelationalTypeMappingSource().GetMapping(typeof(object))).Message);
-    }
-
-    [ConditionalFact]
-    public void SqliteBigIntegerTypeMapping_ctor_throws_when_invalid_argument()
-    {
-        Assert.Throws<ArgumentNullException>(() => new SqliteBigIntegerTypeMapping(null));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SqliteBigIntegerTypeMapping(typeof(string)));
-    }
+    }    
 
     [ConditionalFact]
     public void Plugins_can_override_builtin_mappings()

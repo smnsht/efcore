@@ -23,7 +23,7 @@ public sealed class JsonUInt128ReaderWriter : JsonValueReaderWriter<UInt128>
     /// <inheritdoc />
     public override UInt128 FromJsonTyped(ref Utf8JsonReaderManager manager, object? existingObject = null)
     {
-        if (UInt128.TryParse(manager.CurrentReader.GetString(), out UInt128 result))
+        if (!UInt128.TryParse(manager.CurrentReader.GetString(), out UInt128 result))
         {
             throw new FormatException("UInt128");
         }
