@@ -28,7 +28,7 @@ public class BigIntegerTypeMapping : RelationalTypeMapping
     ///     any release. You should only use it directly in your code with extreme caution and knowing that
     ///     doing so can result in application failures when updating to a new Entity Framework Core release.
     /// </summary>
-    public static BigIntegerTypeMapping Default { get; } = new("text");
+    public static BigIntegerTypeMapping Default { get; } = new("varchar(2000)");
 
     /// <summary>
     ///     Initializes a new instance of the <see cref="IntTypeMapping" /> class.
@@ -58,4 +58,10 @@ public class BigIntegerTypeMapping : RelationalTypeMapping
     /// <returns>The newly created mapping.</returns>
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
         => new BigIntegerTypeMapping(parameters);
+
+    /// <summary>
+    ///     Gets the string format to be used to generate SQL literals of this type.
+    /// </summary>
+    protected override string SqlLiteralFormatString
+        => "'{0:R}'";
 }

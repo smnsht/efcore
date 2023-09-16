@@ -85,9 +85,9 @@ public class SqliteTypeMappingSource : RelationalTypeMappingSource
         { typeof(float), new FloatTypeMapping(RealTypeName) },
         { typeof(Guid), SqliteGuidTypeMapping.Default },
         { typeof(JsonElement), SqliteJsonTypeMapping.Default },
-        { typeof(Int128), new SqliteBigIntegerTypeMapping(typeof(Int128)) },
-        { typeof(UInt128), new SqliteBigIntegerTypeMapping(typeof(UInt128)) },
-        { typeof(BigInteger), new SqliteBigIntegerTypeMapping(typeof(BigInteger)) }
+        { typeof(Int128), SqliteInt128TypeMapping.Default },
+        { typeof(UInt128), SqliteUInt128TypeMapping.Default },
+        { typeof(BigInteger), SqliteBigIntegerTypeMapping.Default }
     };
 
     private readonly Dictionary<string, RelationalTypeMapping> _storeTypeMappings = new(StringComparer.OrdinalIgnoreCase)

@@ -68,4 +68,10 @@ public class Int128TypeMapping : RelationalTypeMapping
     /// <returns>The newly created mapping.</returns>
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
         => new Int128TypeMapping(parameters);
+
+    /// <summary>
+    ///     Gets the string format to be used to generate SQL literals of this type.
+    /// </summary>
+    protected override string SqlLiteralFormatString
+        => "'{0:R}'";
 }

@@ -9,7 +9,7 @@ namespace Microsoft.EntityFrameworkCore.Sqlite.Storage.Internal;
 ///     any release. You should only use it directly in your code with extreme caution and knowing that
 ///     doing so can result in application failures when updating to a new Entity Framework Core release.
 /// </summary>
-public class SqliteBigIntegerTypeMapping : BigIntegerTypeMapping
+public class SqliteUInt128TypeMapping : UInt128TypeMapping
 {
     /// <summary>
     ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
@@ -17,7 +17,7 @@ public class SqliteBigIntegerTypeMapping : BigIntegerTypeMapping
     ///     any release. You should only use it directly in your code with extreme caution and knowing that
     ///     doing so can result in application failures when updating to a new Entity Framework Core release.
     /// </summary>
-    public static new SqliteBigIntegerTypeMapping Default { get; } = new();
+    public static new SqliteUInt128TypeMapping Default { get; } = new();
 
     /// <summary>
     ///     This is an internal API that supports the Entity Framework Core infrastructure and not subject to
@@ -25,7 +25,7 @@ public class SqliteBigIntegerTypeMapping : BigIntegerTypeMapping
     ///     any release. You should only use it directly in your code with extreme caution and knowing that
     ///     doing so can result in application failures when updating to a new Entity Framework Core release.
     /// </summary>
-    public SqliteBigIntegerTypeMapping() : base(SqliteTypeMappingSource.TextTypeName)
+    public SqliteUInt128TypeMapping() : base(SqliteTypeMappingSource.TextTypeName)
     {
     }
 
@@ -35,7 +35,7 @@ public class SqliteBigIntegerTypeMapping : BigIntegerTypeMapping
     ///     any release. You should only use it directly in your code with extreme caution and knowing that
     ///     doing so can result in application failures when updating to a new Entity Framework Core release.
     /// </summary>
-    protected SqliteBigIntegerTypeMapping(RelationalTypeMappingParameters parameters)
+    protected SqliteUInt128TypeMapping(RelationalTypeMappingParameters parameters)
         : base(parameters)
     {
     }
@@ -46,5 +46,5 @@ public class SqliteBigIntegerTypeMapping : BigIntegerTypeMapping
     /// <param name="parameters">The parameters for this mapping.</param>
     /// <returns>The newly created mapping.</returns>
     protected override RelationalTypeMapping Clone(RelationalTypeMappingParameters parameters)
-        => new SqliteBigIntegerTypeMapping(parameters);
+        => new SqliteUInt128TypeMapping(parameters);
 }
