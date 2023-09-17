@@ -199,7 +199,7 @@ namespace Microsoft.Data.Sqlite
             {
                 var value = (long)_value;
                 BindInt64(value);
-            }            
+            }
             else if (type == typeof(BigInteger))
             {
                 var value = ToString((BigInteger)_value);
@@ -243,7 +243,7 @@ namespace Microsoft.Data.Sqlite
             {
                 var value = (long)(ulong)_value;
                 BindInt64(value);
-            }            
+            }
             else if (type == typeof(ushort))
             {
                 var value = (long)(ushort)_value;

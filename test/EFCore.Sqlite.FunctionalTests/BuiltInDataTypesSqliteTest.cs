@@ -34,7 +34,7 @@ public class BuiltInDataTypesSqliteTest : BuiltInDataTypesTestBase<BuiltInDataTy
 
             Assert.Same(entity, context.Set<BuiltInNullableDataTypes>().Single(e => e.Id == 14 && e.TestNullableDecimal == 3m));
         }
-    }    
+    }
 
     [ConditionalFact]
     public virtual void Can_insert_and_read_back_all_mapped_data_types()
@@ -1976,7 +1976,7 @@ ORDER BY "b"."Id", "b0"."Id"
                     b.Property(e => e.Datetimeoffset).HasColumnType("datetimeoffset(3)");
                     b.Property(e => e.Datetime2).HasColumnType("datetime2(3)");
                     b.Property(e => e.Decimal).HasColumnType("decimal(3)");
-                });            
+                });
 
             modelBuilder.Entity<MappedPrecisionAndScaledDataTypesWithIdentity>(
                 b => b.Property(e => e.Decimal).HasColumnType("decimal(5, 2)"));
@@ -2000,7 +2000,7 @@ ORDER BY "b"."Id", "b0"."Id"
         public int Int { get; set; }
         public BigInteger SomeBigInteger { get; set; }
         public Int128 SomeInt128 { get; set; }
-        public UInt128 SomeUInt128 { get; set; }        
+        public UInt128 SomeUInt128 { get; set; }
     }
 
     protected class MappedSizedDataTypes
@@ -2092,6 +2092,6 @@ ORDER BY "b"."Id", "b0"."Id"
     //{
     //    public BigInteger Id { get; set; }
     //    public Int128 Integer128 { get; set; }
-    //    public UInt128 UInteger128 { get; set; }        
+    //    public UInt128 UInteger128 { get; set; }
     //}
 }

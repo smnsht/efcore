@@ -203,7 +203,7 @@ namespace Microsoft.Data.Sqlite
                 command.ExecuteNonQuery();
             }
         }
-        
+
         [Theory]
         [InlineData(true, 1L)]
         [InlineData((byte)1, 1L)]
@@ -243,7 +243,7 @@ namespace Microsoft.Data.Sqlite
                 Assert.Equal(coercedValue, result);
             }
         }
-        
+
         [Theory]
         [MemberData(nameof(BigIntegerTypesData))]
         public void Bind_works_when_big_integer(object value, object coercedValue)

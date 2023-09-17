@@ -60,7 +60,7 @@ public class SqliteBuilderExtensionsTest
 
         Assert.Equal(1, property.GetSrid());
     }
-    
+
     [Theory]
     [MemberData(nameof(BigIntegerTypesData))]
     public void Can_set_default_value_for_big_integer(Type propertyType, string propertyName, object defaultValue)
@@ -75,7 +75,7 @@ public class SqliteBuilderExtensionsTest
 
         Assert.Equal(defaultValue, property.GetDefaultValue());
     }
-    
+
     #region UseSqlReturningClause
 
     [ConditionalFact]
@@ -192,7 +192,7 @@ public class SqliteBuilderExtensionsTest
 
     protected virtual ModelBuilder CreateConventionModelBuilder()
         => SqliteTestHelpers.Instance.CreateConventionBuilder();
-    
+
     private class Customer
     {
         public int Id { get; set; }
@@ -200,7 +200,7 @@ public class SqliteBuilderExtensionsTest
     }
 
     private class BlackHole
-    {        
+    {
         public Int128 Id { get; set; }
         public UInt128 DistanceFromSun { get; set; }
         public BigInteger Mass { get; set; }

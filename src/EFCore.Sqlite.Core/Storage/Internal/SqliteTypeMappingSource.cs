@@ -63,7 +63,7 @@ public class SqliteTypeMappingSource : RelationalTypeMappingSource
 
     private readonly Dictionary<Type, RelationalTypeMapping> _clrTypeMappings = new()
     {
-        { typeof(string), Text },        
+        { typeof(string), Text },
         { typeof(byte[]), Blob },
         { typeof(bool), new BoolTypeMapping(IntegerTypeName) },
         { typeof(byte), new ByteTypeMapping(IntegerTypeName) },

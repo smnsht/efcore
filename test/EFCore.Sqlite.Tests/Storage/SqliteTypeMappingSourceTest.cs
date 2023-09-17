@@ -26,7 +26,7 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(DateTime), DbType.DateTime)]
     [InlineData("TEXT", typeof(DateTimeOffset), DbType.DateTimeOffset)]
     [InlineData("TEXT", typeof(TimeSpan), DbType.Time)]
-    [InlineData("TEXT", typeof(decimal), DbType.Decimal)]    
+    [InlineData("TEXT", typeof(decimal), DbType.Decimal)]
     [InlineData("REAL", typeof(float), DbType.Single)]
     [InlineData("REAL", typeof(double), DbType.Double)]
     [InlineData("TEXT", typeof(Int128), DbType.String)]
@@ -309,7 +309,7 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
             Assert.False(mapping.IsUnicode);
             Assert.False(mapping.IsFixedLength);
         }
-    }    
+    }
 
     [ConditionalFact]
     public void Does_default_mappings_for_values()
@@ -353,7 +353,7 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
         Assert.Equal(
             RelationalStrings.UnsupportedType("object"),
             Assert.Throws<InvalidOperationException>(() => CreateRelationalTypeMappingSource().GetMapping(typeof(object))).Message);
-    }    
+    }
 
     [ConditionalFact]
     public void Plugins_can_override_builtin_mappings()

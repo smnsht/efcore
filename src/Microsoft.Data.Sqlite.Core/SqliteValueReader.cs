@@ -138,7 +138,7 @@ namespace Microsoft.Data.Sqlite
         public virtual long GetInt64(int ordinal)
             => IsDBNull(ordinal)
                 ? throw new InvalidOperationException(GetOnNullErrorMsg(ordinal))
-                : GetInt64Core(ordinal);        
+                : GetInt64Core(ordinal);
 
         protected abstract long GetInt64Core(int ordinal);
 #if NET7_0_OR_GREATER
@@ -234,7 +234,7 @@ namespace Microsoft.Data.Sqlite
                 return (T)(object)GetInt128(ordinal);
             }
             if (typeof(T) == typeof(UInt128))
-            {                
+            {
                 return (T)(object)checked(GetUInt128(ordinal));
             }
 #endif
@@ -267,7 +267,7 @@ namespace Microsoft.Data.Sqlite
             {
                 return (T)(object)GetBigInteger(ordinal);
             }
-            
+
             if (typeof(T) == typeof(ushort))
             {
                 return (T)(object)checked((ushort)GetInt64(ordinal));
