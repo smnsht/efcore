@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Data;
+using System.Numerics;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.EntityFrameworkCore.Sqlite.Storage.Internal;
 
@@ -25,9 +26,12 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(DateTime), DbType.DateTime)]
     [InlineData("TEXT", typeof(DateTimeOffset), DbType.DateTimeOffset)]
     [InlineData("TEXT", typeof(TimeSpan), DbType.Time)]
-    [InlineData("TEXT", typeof(decimal), DbType.Decimal)]
+    [InlineData("TEXT", typeof(decimal), DbType.Decimal)]    
     [InlineData("REAL", typeof(float), DbType.Single)]
     [InlineData("REAL", typeof(double), DbType.Double)]
+    [InlineData("TEXT", typeof(Int128), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger), DbType.String)]
     [InlineData("INTEGER", typeof(ByteEnum), DbType.Byte)]
     [InlineData("INTEGER", typeof(ShortEnum), DbType.Int16)]
     [InlineData("INTEGER", typeof(IntEnum), DbType.Int32)]
@@ -51,6 +55,9 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(decimal?), DbType.Decimal)]
     [InlineData("REAL", typeof(float?), DbType.Single)]
     [InlineData("REAL", typeof(double?), DbType.Double)]
+    [InlineData("TEXT", typeof(Int128?), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128?), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger?), DbType.String)]
     [InlineData("INTEGER", typeof(ByteEnum?), DbType.Byte)]
     [InlineData("INTEGER", typeof(ShortEnum?), DbType.Int16)]
     [InlineData("INTEGER", typeof(IntEnum?), DbType.Int32)]
@@ -173,6 +180,15 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(decimal), DbType.Decimal)]
     [InlineData("CONTEXTUALIZE", typeof(decimal), DbType.Decimal)]
     [InlineData("RUBBISH", typeof(decimal), DbType.Decimal)]
+    [InlineData("TEXT", typeof(Int128), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(Int128), DbType.String)]
+    [InlineData("RUBBISH", typeof(Int128), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(UInt128), DbType.String)]
+    [InlineData("RUBBISH", typeof(UInt128), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(BigInteger), DbType.String)]
+    [InlineData("RUBBISH", typeof(BigInteger), DbType.String)]
     [InlineData("REAL", typeof(float), DbType.Single)]
     [InlineData("UNREALISTIC", typeof(float), DbType.Single)]
     [InlineData("RUBBISH", typeof(float), DbType.Single)]
@@ -242,6 +258,15 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
     [InlineData("TEXT", typeof(decimal?), DbType.Decimal)]
     [InlineData("CONTEXTUALIZE", typeof(decimal?), DbType.Decimal)]
     [InlineData("RUBBISH", typeof(decimal?), DbType.Decimal)]
+    [InlineData("TEXT", typeof(Int128?), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(Int128?), DbType.String)]
+    [InlineData("RUBBISH", typeof(Int128?), DbType.String)]
+    [InlineData("TEXT", typeof(UInt128?), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(UInt128?), DbType.String)]
+    [InlineData("RUBBISH", typeof(UInt128?), DbType.String)]
+    [InlineData("TEXT", typeof(BigInteger?), DbType.String)]
+    [InlineData("CONTEXTUALIZE", typeof(BigInteger?), DbType.String)]
+    [InlineData("RUBBISH", typeof(BigInteger?), DbType.String)]
     [InlineData("REAL", typeof(float?), DbType.Single)]
     [InlineData("UNREALISTIC", typeof(float?), DbType.Single)]
     [InlineData("RUBBISH", typeof(float?), DbType.Single)]
@@ -284,26 +309,28 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
             Assert.False(mapping.IsUnicode);
             Assert.False(mapping.IsFixedLength);
         }
-    }
+    }    
 
     [ConditionalFact]
     public void Does_default_mappings_for_values()
     {
-        var model = CreateModel();
-        Assert.Equal("TEXT", CreateRelationalTypeMappingSource(model).GetMappingForValue("Cheese").StoreType);
-        Assert.Equal("BLOB", CreateRelationalTypeMappingSource(model).GetMappingForValue(new byte[1]).StoreType);
-        Assert.Equal("TEXT", CreateRelationalTypeMappingSource(model).GetMappingForValue(new DateTime()).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue(1).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue(1L).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue((byte)1).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue((short)1).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue((uint)1).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue((ulong)1).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue((sbyte)1).StoreType);
-        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource(model).GetMappingForValue((ushort)1).StoreType);
-        Assert.Equal("TEXT", CreateRelationalTypeMappingSource(model).GetMappingForValue(1.0m).StoreType);
-        Assert.Equal("REAL", CreateRelationalTypeMappingSource(model).GetMappingForValue(1.0).StoreType);
-        Assert.Equal("REAL", CreateRelationalTypeMappingSource(model).GetMappingForValue(1.0f).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue("Cheese").StoreType);
+        Assert.Equal("BLOB", CreateRelationalTypeMappingSource().GetMappingForValue(new byte[1]).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new DateTime()).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue(1).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue(1L).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue((byte)1).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue((short)1).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue((uint)1).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue((ulong)1).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue((sbyte)1).StoreType);
+        Assert.Equal("INTEGER", CreateRelationalTypeMappingSource().GetMappingForValue((ushort)1).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(1.0m).StoreType);
+        Assert.Equal("REAL", CreateRelationalTypeMappingSource().GetMappingForValue(1.0).StoreType);
+        Assert.Equal("REAL", CreateRelationalTypeMappingSource().GetMappingForValue(1.0f).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new Int128()).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new UInt128()).StoreType);
+        Assert.Equal("TEXT", CreateRelationalTypeMappingSource().GetMappingForValue(new BigInteger()).StoreType);
     }
 
     [ConditionalFact]
@@ -325,8 +352,8 @@ public class SqliteTypeMappingSourceTest : RelationalTypeMapperTestBase
 
         Assert.Equal(
             RelationalStrings.UnsupportedType("object"),
-            Assert.Throws<InvalidOperationException>(() => CreateRelationalTypeMappingSource(CreateModel()).GetMapping(typeof(object))).Message);
-    }
+            Assert.Throws<InvalidOperationException>(() => CreateRelationalTypeMappingSource().GetMapping(typeof(object))).Message);
+    }    
 
     [ConditionalFact]
     public void Plugins_can_override_builtin_mappings()
